@@ -1,0 +1,9 @@
+.grid {
+  display: flex;
+  gap: 2rem;
+}
+
+.grid-element {
+  flex: 1;
+  min-width: 300px;
+}
