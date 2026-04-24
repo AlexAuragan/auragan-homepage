@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<!--
+	Phantom by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Blog personnel d'Alexandre DANG, ingénieur en intelligences artificielles et hypnotiseur de rue</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Header -->
+        {{ include "assets/partials/header.html" }}
+
+
+				<!-- Menu -->
+				{{ include "assets/partials/menu.html" }}
+
+				<!-- Main -->
+					<div id="main">
+						<div class="inner">
+							<header>
+								<h1>Bienvenue sur mon site internet<br />
+								Je m'appelle Alexandre et je suis ingénieur en intelligences artificielles et hypnotiseur de rue.</h1>
+								<p>Sur ce site vous retrouverez les différents projets que sur lesquels je travail ou ai travaillé. J'espère que vous y trouverez des choses qui vous intéressent.</p>
+							</header>
+							<section class="tiles">
+								<article class="style1">
+									<span class="image">
+										<img src="images/demo_hypnose.jpeg" alt="" />
+									</span>
+									<a href="https://hypnose.auragan.fr" target="_blank">
+										<h2>Hypnose</h2>
+										<div class="content">
+											<p>Blog dédié à l'apprentissage et au partage de connaissances sur l'hypnose de rue</p>
+										</div>
+									</a>
+								</article>
+								<article class="style2">
+									<span class="image">
+										<img src="images/example_frataga.png" alt="" />
+									</span>
+									<a href="https://frataga.auragan.fr" target="_blank">
+										<h2>NLP to D&D</h2>
+										<div class="content">
+											<p>Site pour trouver les archetypes de personnages D&D qui vous correspondent</p>
+										</div>
+									</a>
+								</article>
+
+								<article class="style3">
+									<span class="image">
+										<img src="images/pic03.jpg" alt="" />
+									</span>
+									<a href="/pages/celeba-gan">
+										<h2>CelebA GAN</h2>
+										<div class="content">
+											<p>Génération de visages de célébrités à l'aide d'un réseau antagoniste génératif</p>
+										</div>
+									</a>
+								</article>
+
+							</section>
+						</div>
+					</div>
+
+				<!-- Footer -->
+				{{ include "assets/partials/footer.html" }}
+
+			</div>
+    <!-- test -->
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
