@@ -47,8 +47,8 @@
           <div class="code-block">
           <span class="code-filename">model.py</span>
           <pre><code class="language-python">
-# Generator model, takes a seed vector and make an image
-  # It is trained to fool the Discriminator.
+# Generator model, takes a random seed vector and make an image
+# It is trained to fool the Discriminator.
 class Discriminator(torch.nn.Module):
     def __init__(self):
         super().__init__()
@@ -62,7 +62,7 @@ class Discriminator(torch.nn.Module):
     def forward(self, x):
         return self.net(x)
 
-
+# The Discriminator is trained to figure out if an image was made by the Generator or not.
 class Generator(torch.nn.Module):
     def __init__(self, latent_size):
         super().__init__()
@@ -80,6 +80,7 @@ class Generator(torch.nn.Module):
           <div class="code-block">
           <span class="code-filename">core.py</span>
           <pre><code class="language-python">
+
 def train_step(optimizer, loss):
     optimizer.zero_grad()
     loss.backward()
@@ -87,6 +88,7 @@ def train_step(optimizer, loss):
 
 
 def train_epoch(g_model, d_model, g_optimizer, d_optimizer, dataset, config):
+    # We use Binary Cross Entropy loss, standard for True/False prediction
     criterion = torch.nn.BCELoss()
     g_model.train(); d_model.train()
 
