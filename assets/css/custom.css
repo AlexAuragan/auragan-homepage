@@ -7,3 +7,17 @@
   flex: 1;
   min-width: 300px;
 }
+
+.code-block { margin: 1.5em 0; }
+.code-block .code-filename {
+  display: inline-block;
+  background: #e0e0e0;
+  color: #555;
+  font-family: monospace;
+  font-size: 0.8em;
+  padding: 3px 12px;
+  border-radius: 4px 4px 0 0;
+  border: 1px solid #ccc;
+  border-bottom: none;
+}
+.code-block pre { margin-top: 0 !important; border-top-left-radius: 0 !important; }
