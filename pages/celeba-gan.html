@@ -12,6 +12,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" />
 	</head>
 	<body class="is-preload">
 		<!-- Wrapper -->
@@ -20,28 +21,47 @@
 				<!-- Header -->
 				{{ include "assets/partials/header.html" }}
 
-				<!-- Menu -->
-				{{ include "assets/partials/menu.html" }}
+      <!-- Menu -->
+      {{ include "assets/partials/menu.html" }}
 
-				<!-- Main -->
-					<div id="main">
-						<div class="inner">
-							<h1>CelebA GAN</h1>
-							<span class="image main"><img src="images/gan/architecture.png" alt="gan architecture" style="max-height: 300px; object-fit: contain;" /></span>
-							<p>
-                Sur cette page je vais expliquer comment j'ai entrainé mon propre modèle d'IA dans le but de faire des deepfake à partir du dataset <a href="https://www.kaggle.com/datasets/jessicali9530/celeba-dataset">CelebA</a>
-              </p>
-              <h2>Objectif</h2>
-              <p>
+      <!-- Main -->
+      <div id="main">
+        <div class="inner">
+          <h1>CelebA GAN</h1>
+          <span class="image main"><img src="images/gan/architecture.png" alt="gan architecture" style="max-height: 300px; object-fit: contain;" /></span>
+          <p>
+            Sur cette page je vais expliquer comment j'ai entrainé mon propre modèle d'IA dans le but de faire des deepfake à partir du dataset <a href="https://www.kaggle.com/datasets/jessicali9530/celeba-dataset">CelebA</a>
+          </p>
+          <h2>Objectif</h2>
+          <p>
             Ce n'est pas la première fois que je realise ce projet, j'ai déjà tenté l'expérience en 2022 mais je m'étais confronté à plusieurs problèmes:
             <list>
               <li>Je n'avais aucune idée de comment mesurer les progrès de mon modèle, à cause des fonctionnement des GAN, il n'y a pas vraiment de loss qui diminue</li>
               <li>En conséquent, je n'avais aucune idée de combien de compute je devais allouer, parle-t-on d'heures ? De jours ? De semaine ?</li>
               <li>J'étais étudiant et j'avais peur d'allouer un budget, aujourd'hui je peux me permettre de louer une VM sur google cloud si besoin, je peux donc tester des modèles plus gros et plus longtemps</li>
             </list>
-              </p>
-						</div>
-					</div>
+            Mon objectif aujourd'hui est de reproduire l'expérience avec un plus gros budget, de meilleurs connaissances et un état de l'art plus poussé.
+          </p>
+          <h2>ÉTAPE 1: Faire une architecture de base</h2>
+          <pre><code class="language-python">import torch
+import torch.nn as nn
+
+class Generator(nn.Module):
+    def __init__(self, latent_dim=100):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Linear(latent_dim, 256),
+            nn.ReLU(),
+            nn.Linear(256, 784),
+            nn.Tanh()
+        )
+
+    def forward(self, z):
+        return self.model(z)
+</code></pre>
+
+        </div>
+      </div>
 
 				<!-- Footer -->
 				{{ include "assets/partials/footer.html" }}
@@ -54,6 +74,8 @@
 			<script src="assets/js/breakpoints.min.js"></script>
 			<script src="assets/js/util.js"></script>
 			<script src="assets/js/main.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
 
 	</body>
 </html>
