@@ -47,78 +47,77 @@ Free for personal and commercial use under the CCA 3.0 license (html5up.net/lice
   <div class="code-block">
     <span class="code-filename">model.py</span>
     <pre><code class="language-python">
-      # Generator model, takes a random seed vector and make an image
-      # It is trained to fool the Discriminator.
-      class Discriminator(torch.nn.Module):
-      def __init__(self):
-      super().__init__()
-      self.net = torch.nn.Sequential(
-      torch.nn.Conv2d(3, 64, 3, stride=2, padding=1),    torch.nn.LeakyReLU(0.2),
-      torch.nn.Conv2d(64, 128, 3, stride=2, padding=1),  torch.nn.LeakyReLU(0.2),
-      torch.nn.Conv2d(128, 256, 3, stride=2, padding=1), torch.nn.LeakyReLU(0.2),
-      torch.nn.Flatten(), torch.nn.Dropout(0.4), torch.nn.Linear(flat_size, 1),
-      )
+# Generator model, takes a random seed vector and make an image
+# It is trained to fool the Discriminator.
+class Discriminator(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.net = torch.nn.Sequential(
+            torch.nn.Conv2d(3, 64, 3, stride=2, padding=1),    torch.nn.LeakyReLU(0.2),
+            torch.nn.Conv2d(64, 128, 3, stride=2, padding=1),  torch.nn.LeakyReLU(0.2),
+            torch.nn.Conv2d(128, 256, 3, stride=2, padding=1), torch.nn.LeakyReLU(0.2),
+            torch.nn.Flatten(), torch.nn.Dropout(0.4), torch.nn.Linear(flat_size, 1),
+        )
 
-      def forward(self, x):
-      return self.net(x)
+    def forward(self, x):
+        return self.net(x)
 
-      # The Discriminator is trained to figure out if an image was made by the Generator or not.
-      class Generator(torch.nn.Module):
-      def __init__(self, latent_size):
-      super().__init__()
-      self.net = torch.nn.Sequential(
-      torch.nn.Linear(latent_size, 64 * 28 * 32), torch.nn.LeakyReLU(0.2),
-      Reshape(64, 28, 32),
-      torch.nn.ConvTranspose2d(64, 128, 4, stride=2, padding=1), torch.nn.LeakyReLU(0.2),
-      torch.nn.ConvTranspose2d(128, 3, 4, stride=2, padding=1), torch.nn.Tanh(),
-      )
+# The Discriminator is trained to figure out if an image was made by the Generator or not.
+class Generator(torch.nn.Module):
+    def __init__(self, latent_size):
+        super().__init__()
+        self.net = torch.nn.Sequential(
+            torch.nn.Linear(latent_size, 64 * 28 * 32), torch.nn.LeakyReLU(0.2),
+            Reshape(64, 28, 32),
+            torch.nn.ConvTranspose2d(64, 128, 4, stride=2, padding=1), torch.nn.LeakyReLU(0.2),
+            torch.nn.ConvTranspose2d(128, 3, 4, stride=2, padding=1), torch.nn.Tanh(),
+        )
 
-      def forward(self, x):
-      return self.net(x)
+    def forward(self, x):
+        return self.net(x)
     </code></pre>
   </div>
   <div class="code-block">
     <span class="code-filename">core.py</span>
     <pre><code class="language-python">
-
-      def train_step(optimizer, loss):
-      optimizer.zero_grad()
-      loss.backward()
-      optimizer.step()
-
-
-      def train_epoch(g_model, d_model, g_optimizer, d_optimizer, dataset, config):
-      # We use Binary Cross Entropy loss, standard for True/False prediction
-      criterion = torch.nn.BCELoss()
-      g_model.train(); d_model.train()
-
-      for batch, _ in dataset:
-      batch = batch.cuda()
-      real_labels = torch.ones(len(batch), 1).cuda()
-      fake_labels = torch.zeros(len(batch), 1).cuda()
-
-      train_step(d_optimizer, criterion(d_model(batch), real_labels))
-      train_step(d_optimizer, criterion(d_model(generate_fake(g_model, config)), fake_labels))
-
-      # Last time I tested, the Generator was training slower than the Discriminator, this is expected:
-      # It's probably way easier to discriminate an image than to generate a convincing one.
-      # However, if the Discriminator gets too good and guess right every time, the Generator cannot
-      # learn what's working. To balance this, I decided to train the generator twice, but we will find
-      # more elegant solutions later.
-      for _ in range(2):
-      train_step(g_optimizer, criterion(d_model(generate_fake(g_model, config)), real_labels))
+def train_step(optimizer, loss):
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
 
 
-      def train(config):
-      g_model, d_model, g_optimizer, d_optimizer = make_model(config)
-      dataset = make_dataset(config)
+def train_epoch(g_model, d_model, g_optimizer, d_optimizer, dataset, config):
+    # We use Binary Cross Entropy loss, standard for True/False prediction
+    criterion = torch.nn.BCELoss()
+    g_model.train(); d_model.train()
 
-      for epoch in range(config["number_epochs"]):
-      update_lr(g_optimizer, d_optimizer, config)
-      train_epoch(g_model, d_model, g_optimizer, d_optimizer, dataset, config)
-      log_samples(g_model, epoch)
+    for batch, _ in dataset:
+        batch = batch.cuda()
+        real_labels = torch.ones(len(batch), 1).cuda()
+        fake_labels = torch.zeros(len(batch), 1).cuda()
 
-      save_model(g_model, d_model, config)
+        train_step(d_optimizer, criterion(d_model(batch), real_labels))
+        train_step(d_optimizer, criterion(d_model(generate_fake(g_model, config)), fake_labels))
+
+        # Last time I tested, the Generator was training slower than the Discriminator, this is expected:
+        # It's probably way easier to discriminate an image than to generate a convincing one.
+        # However, if the Discriminator gets too good and guess right every time, the Generator cannot
+        # learn what's working. To balance this, I decided to train the generator twice, but we will find
+        # more elegant solutions later.
+        for _ in range(2):
+            train_step(g_optimizer, criterion(d_model(generate_fake(g_model, config)), real_labels))
+
+
+def train(config):
+    g_model, d_model, g_optimizer, d_optimizer = make_model(config)
+    dataset = make_dataset(config)
+
+    for epoch in range(config["number_epochs"]):
+        update_lr(g_optimizer, d_optimizer, config)
+        train_epoch(g_model, d_model, g_optimizer, d_optimizer, dataset, config)
+        log_samples(g_model, epoch)
+
+    save_model(g_model, d_model, config)
     </code></pre>
   </div>
   <h3>RÉSULTATS:</h3>
@@ -139,69 +138,69 @@ Le papier original de <a href="https://arxiv.org/pdf/1511.06434">DCGAN</a> (DCGA
 <span class="code-filename">model.py</span>
 <pre><code class="language-python">
 class Discriminator(torch.nn.Module): # 1.58M parameters
-def __init__(self):
-super().__init__()
-self.features = torch.nn.Sequential(
-torch.nn.utils.spectral_norm(
-torch.nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1)
-), # 3 * 64 * 3 * 3 + 64 = 1,792
-torch.nn.LeakyReLU(0.2),
-torch.nn.utils.spectral_norm(
-torch.nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1)
-), # 64 * 128 * 3 * 3 + 128 = 73,856
-torch.nn.LeakyReLU(0.2),
-torch.nn.utils.spectral_norm(
-torch.nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1)
-), # 128 * 256 * 3 * 3 + 256 = 295,168
-torch.nn.LeakyReLU(0.2),
-torch.nn.utils.spectral_norm(
-torch.nn.Conv2d(256, 512, kernel_size=3, stride=2, padding=1)
-), # 256 * 512 * 3 * 3 + 512 = 1,180,160
-torch.nn.LeakyReLU(0.2),
-torch.nn.Flatten(),
-)
-# 4 stride-2 convs on 112x128: 112->56->28->14->7, 128->64->32->16->8
-# flat_size = 512 * 7 * 8 = 28,672
-dummy = torch.zeros(1, *INPUT_SHAPE)
-flat_size = self.features(dummy).shape[1]
-self.classifier = torch.nn.Sequential(
-torch.nn.Dropout(0.4),
-torch.nn.Linear(flat_size, 1), # 28,672 * 1 + 1 = 28,673
-)
+    def __init__(self):
+        super().__init__()
+        self.features = torch.nn.Sequential(
+            torch.nn.utils.spectral_norm(
+                torch.nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1)
+            ), # 3 * 64 * 3 * 3 + 64 = 1,792
+            torch.nn.LeakyReLU(0.2),
+            torch.nn.utils.spectral_norm(
+                torch.nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1)
+            ), # 64 * 128 * 3 * 3 + 128 = 73,856
+            torch.nn.LeakyReLU(0.2),
+            torch.nn.utils.spectral_norm(
+                torch.nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1)
+            ), # 128 * 256 * 3 * 3 + 256 = 295,168
+            torch.nn.LeakyReLU(0.2),
+            torch.nn.utils.spectral_norm(
+                torch.nn.Conv2d(256, 512, kernel_size=3, stride=2, padding=1)
+            ), # 256 * 512 * 3 * 3 + 512 = 1,180,160
+            torch.nn.LeakyReLU(0.2),
+            torch.nn.Flatten(),
+        )
+        # 4 stride-2 convs on 112x128: 112->56->28->14->7, 128->64->32->16->8
+        # flat_size = 512 * 7 * 8 = 28,672
+        dummy = torch.zeros(1, *INPUT_SHAPE)
+        flat_size = self.features(dummy).shape[1]
+        self.classifier = torch.nn.Sequential(
+            torch.nn.Dropout(0.4),
+            torch.nn.Linear(flat_size, 1), # 28,672 * 1 + 1 = 28,673
+        )
 
-def forward(self, x):
-return self.classifier(self.features(x))
+    def forward(self, x):
+        return self.classifier(self.features(x))
 
 
 class Generator(torch.nn.Module): # 5.69M parameters
-def __init__(self, latent_size: int):
-super().__init__()
-n_nodes = 512 * (112 // (2**4)) * (128 // (2**4))  # 512 * 7 * 8 = 28,672
-self.features = torch.nn.Sequential(
-torch.nn.Linear(latent_size, n_nodes),              # latent_size * 28,672 + 28,672
-# e.g. latent=100: 2,895,872
-torch.nn.LeakyReLU(0.2),
-Reshape(512, 7, 8),
-torch.nn.ConvTranspose2d(512, 256, kernel_size=4, stride=2, padding=1),  # 512 * 256 * 4 * 4 + 256 = 2,097,408
-torch.nn.BatchNorm2d(256),                          # 256 * 2 = 512
-torch.nn.LeakyReLU(0.2),
-torch.nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),  # 256 * 128 * 4 * 4 + 128 = 524,416
-torch.nn.BatchNorm2d(128),                          # 128 * 2 = 256
-torch.nn.LeakyReLU(0.2),
-torch.nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),   # 128 * 64 * 4 * 4 + 64 = 131,136
-torch.nn.BatchNorm2d(64),                           # 64 * 2 = 128
-torch.nn.LeakyReLU(0.2),
-torch.nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),    # 64 * 32 * 4 * 4 + 32 = 32,800
-torch.nn.BatchNorm2d(32),                           # 32 * 2 = 64
-torch.nn.LeakyReLU(0.2),
-)
-self.generator = torch.nn.Sequential(
-torch.nn.ConvTranspose2d(32, 3, kernel_size=7, padding=3),               # 32 * 3 * 7 * 7 + 3 = 4,707
-torch.nn.Tanh()
-)
+    def __init__(self, latent_size: int):
+        super().__init__()
+        n_nodes = 512 * (112 // (2**4)) * (128 // (2**4))  # 512 * 7 * 8 = 28,672
+        self.features = torch.nn.Sequential(
+            torch.nn.Linear(latent_size, n_nodes),              # latent_size * 28,672 + 28,672
+                                                                # e.g. latent=100: 2,895,872
+            torch.nn.LeakyReLU(0.2),
+            Reshape(512, 7, 8),
+            torch.nn.ConvTranspose2d(512, 256, kernel_size=4, stride=2, padding=1),  # 512 * 256 * 4 * 4 + 256 = 2,097,408
+            torch.nn.BatchNorm2d(256),                          # 256 * 2 = 512
+            torch.nn.LeakyReLU(0.2),
+            torch.nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),  # 256 * 128 * 4 * 4 + 128 = 524,416
+            torch.nn.BatchNorm2d(128),                          # 128 * 2 = 256
+            torch.nn.LeakyReLU(0.2),
+            torch.nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),   # 128 * 64 * 4 * 4 + 64 = 131,136
+            torch.nn.BatchNorm2d(64),                           # 64 * 2 = 128
+            torch.nn.LeakyReLU(0.2),
+            torch.nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),    # 64 * 32 * 4 * 4 + 32 = 32,800
+            torch.nn.BatchNorm2d(32),                           # 32 * 2 = 64
+            torch.nn.LeakyReLU(0.2),
+        )
+        self.generator = torch.nn.Sequential(
+            torch.nn.ConvTranspose2d(32, 3, kernel_size=7, padding=3),               # 32 * 3 * 7 * 7 + 3 = 4,707
+            torch.nn.Tanh()
+        )
 
-def forward(self, x):
-return self.generator(self.features(x))
+    def forward(self, x):
+        return self.generator(self.features(x))
 </code></pre>
 </div>
 <h3>RÉSULTATS:</h3>
