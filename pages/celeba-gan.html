@@ -1,254 +1,257 @@
 <!DOCTYPE HTML>
 <!--
-	Phantom by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+Phantom by HTML5 UP
+html5up.net | @ajlkn
+Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 -->
 <html>
-	<head>
-		<title>CelebA GAN - auragan.fr</title>
-		<meta charset="utf-8" />
-		<base href="/" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-		<link rel="stylesheet" href="assets/css/main.css" />
-		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" />
-		<link rel="stylesheet" href="assets/css/custom.css" />
-	</head>
-	<body class="is-preload">
-		<!-- Wrapper -->
-			<div id="wrapper">
+<head>
+  <title>CelebA GAN - auragan.fr</title>
+  <meta charset="utf-8" />
+  <base href="/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" />
+  <link rel="stylesheet" href="assets/css/custom.css" />
+</head>
+<body class="is-preload">
+<!-- Wrapper -->
+<div id="wrapper">
 
-				<!-- Header -->
-				{{ include "assets/partials/header.html" }}
+<!-- Header -->
+{{ include "assets/partials/header.html" }}
 
-      <!-- Menu -->
-      {{ include "assets/partials/menu.html" }}
+<!-- Menu -->
+{{ include "assets/partials/menu.html" }}
 
-      <!-- Main -->
-      <div id="main">
-        <div class="inner">
-          <h1>CelebA GAN</h1>
-          <span class="image main"><img src="images/gan/architecture.png" alt="gan architecture" style="max-height: 300px; object-fit: contain;" /></span>
-          <p>
-            Sur cette page je vais expliquer comment j'ai entrainé mon propre modèle d'IA dans le but de faire des deepfake à partir du dataset <a href="https://www.kaggle.com/datasets/jessicali9530/celeba-dataset">CelebA</a>
-          </p>
-          <h2>Objectif</h2>
-          <p>
-            Ce n'est pas la première fois que je realise ce projet, j'ai déjà tenté l'expérience en 2022 mais je m'étais confronté à plusieurs problèmes:
-            <list>
-              <li>Je n'avais aucune idée de comment mesurer les progrès de mon modèle, à cause des fonctionnement des GAN, il n'y a pas vraiment de loss qui diminue</li>
-              <li>En conséquent, je n'avais aucune idée de combien de compute je devais allouer, parle-t-on d'heures ? De jours ? De semaine ?</li>
-              <li>J'étais étudiant et j'avais peur d'allouer un budget, aujourd'hui je peux me permettre de louer une VM sur google cloud si besoin, je peux donc tester des modèles plus gros et plus longtemps</li>
-            </list>
-            Mon objectif aujourd'hui est de reproduire l'expérience avec un plus gros budget, de meilleurs connaissances et un état de l'art plus poussé.
-          </p>
-          <h2>ÉTAPE 1: Structure de base</h2>
-          <div class="code-block">
-          <span class="code-filename">model.py</span>
-          <pre><code class="language-python">
-# Generator model, takes a random seed vector and make an image
-# It is trained to fool the Discriminator.
-class Discriminator(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.net = torch.nn.Sequential(
-            torch.nn.Conv2d(3, 64, 3, stride=2, padding=1),    torch.nn.LeakyReLU(0.2),
-            torch.nn.Conv2d(64, 128, 3, stride=2, padding=1),  torch.nn.LeakyReLU(0.2),
-            torch.nn.Conv2d(128, 256, 3, stride=2, padding=1), torch.nn.LeakyReLU(0.2),
-            torch.nn.Flatten(), torch.nn.Dropout(0.4), torch.nn.Linear(flat_size, 1),
-        )
+<!-- Main -->
+<div id="main">
+<div class="inner">
+  <h1>CelebA GAN</h1>
+  <span class="image main"><img src="images/gan/architecture.png" alt="gan architecture" style="max-height: 300px; object-fit: contain;" /></span>
+  <p>
+    Sur cette page je vais expliquer comment j'ai entrainé mon propre modèle d'IA dans le but de faire des deepfake à partir du dataset <a href="https://www.kaggle.com/datasets/jessicali9530/celeba-dataset">CelebA</a>
+  </p>
+  <h2>Objectif</h2>
+  <p>
+    Ce n'est pas la première fois que je realise ce projet, j'ai déjà tenté l'expérience en 2022 mais je m'étais confronté à plusieurs problèmes:
+    <list>
+      <li>Je n'avais aucune idée de comment mesurer les progrès de mon modèle, à cause des fonctionnement des GAN, il n'y a pas vraiment de loss qui diminue</li>
+      <li>En conséquent, je n'avais aucune idée de combien de compute je devais allouer, parle-t-on d'heures ? De jours ? De semaine ?</li>
+      <li>J'étais étudiant et j'avais peur d'allouer un budget, aujourd'hui je peux me permettre de louer une VM sur google cloud si besoin, je peux donc tester des modèles plus gros et plus longtemps</li>
+    </list>
+    Mon objectif aujourd'hui est de reproduire l'expérience avec un plus gros budget, de meilleurs connaissances et un état de l'art plus poussé.
+  </p>
+  <h2>ÉTAPE 1: Structure de base</h2>
+  <div class="code-block">
+    <span class="code-filename">model.py</span>
+    <pre><code class="language-python">
+      # Generator model, takes a random seed vector and make an image
+      # It is trained to fool the Discriminator.
+      class Discriminator(torch.nn.Module):
+      def __init__(self):
+      super().__init__()
+      self.net = torch.nn.Sequential(
+      torch.nn.Conv2d(3, 64, 3, stride=2, padding=1),    torch.nn.LeakyReLU(0.2),
+      torch.nn.Conv2d(64, 128, 3, stride=2, padding=1),  torch.nn.LeakyReLU(0.2),
+      torch.nn.Conv2d(128, 256, 3, stride=2, padding=1), torch.nn.LeakyReLU(0.2),
+      torch.nn.Flatten(), torch.nn.Dropout(0.4), torch.nn.Linear(flat_size, 1),
+      )
 
-    def forward(self, x):
-        return self.net(x)
+      def forward(self, x):
+      return self.net(x)
 
-# The Discriminator is trained to figure out if an image was made by the Generator or not.
-class Generator(torch.nn.Module):
-    def __init__(self, latent_size):
-        super().__init__()
-        self.net = torch.nn.Sequential(
-            torch.nn.Linear(latent_size, 64 * 28 * 32), torch.nn.LeakyReLU(0.2),
-            Reshape(64, 28, 32),
-            torch.nn.ConvTranspose2d(64, 128, 4, stride=2, padding=1), torch.nn.LeakyReLU(0.2),
-            torch.nn.ConvTranspose2d(128, 3, 4, stride=2, padding=1), torch.nn.Tanh(),
-        )
+      # The Discriminator is trained to figure out if an image was made by the Generator or not.
+      class Generator(torch.nn.Module):
+      def __init__(self, latent_size):
+      super().__init__()
+      self.net = torch.nn.Sequential(
+      torch.nn.Linear(latent_size, 64 * 28 * 32), torch.nn.LeakyReLU(0.2),
+      Reshape(64, 28, 32),
+      torch.nn.ConvTranspose2d(64, 128, 4, stride=2, padding=1), torch.nn.LeakyReLU(0.2),
+      torch.nn.ConvTranspose2d(128, 3, 4, stride=2, padding=1), torch.nn.Tanh(),
+      )
 
-    def forward(self, x):
-        return self.net(x)
-          </code></pre>
-          </div>
-          <div class="code-block">
-          <span class="code-filename">core.py</span>
-          <pre><code class="language-python">
+      def forward(self, x):
+      return self.net(x)
+    </code></pre>
+  </div>
+  <div class="code-block">
+    <span class="code-filename">core.py</span>
+    <pre><code class="language-python">
 
-def train_step(optimizer, loss):
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-
-
-def train_epoch(g_model, d_model, g_optimizer, d_optimizer, dataset, config):
-    # We use Binary Cross Entropy loss, standard for True/False prediction
-    criterion = torch.nn.BCELoss()
-    g_model.train(); d_model.train()
-
-    for batch, _ in dataset:
-        batch = batch.cuda()
-        real_labels = torch.ones(len(batch), 1).cuda()
-        fake_labels = torch.zeros(len(batch), 1).cuda()
-
-        train_step(d_optimizer, criterion(d_model(batch), real_labels))
-        train_step(d_optimizer, criterion(d_model(generate_fake(g_model, config)), fake_labels))
-
-        # Last time I tested, the Generator was training slower than the Discriminator, this is expected:
-        # It's probably way easier to discriminate an image than to generate a convincing one.
-        # However, if the Discriminator gets too good and guess right every time, the Generator cannot
-        # learn what's working. To balance this, I decided to train the generator twice, but we will find
-        # more elegant solutions later.
-        for _ in range(2):
-            train_step(g_optimizer, criterion(d_model(generate_fake(g_model, config)), real_labels))
+      def train_step(optimizer, loss):
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
 
 
-def train(config):
-    g_model, d_model, g_optimizer, d_optimizer = make_model(config)
-    dataset = make_dataset(config)
+      def train_epoch(g_model, d_model, g_optimizer, d_optimizer, dataset, config):
+      # We use Binary Cross Entropy loss, standard for True/False prediction
+      criterion = torch.nn.BCELoss()
+      g_model.train(); d_model.train()
 
-    for epoch in range(config["number_epochs"]):
-        update_lr(g_optimizer, d_optimizer, config)
-        train_epoch(g_model, d_model, g_optimizer, d_optimizer, dataset, config)
-        log_samples(g_model, epoch)
+      for batch, _ in dataset:
+      batch = batch.cuda()
+      real_labels = torch.ones(len(batch), 1).cuda()
+      fake_labels = torch.zeros(len(batch), 1).cuda()
 
-    save_model(g_model, d_model, config)
-          </code></pre>
-          </div>
-          <h3>RÉSULTATS:</h3>
-          Résultats après une (1) epoch, c'est à dire un entrainement sur chacune des images une fois.
-          Le but de cet entrainement est surtout de valider le code, tester l'intégration avec Wandb, s'assurer que la loss ne dégénère pas...
-          <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
-            <img src="images/gan/run_1/samples_1.png" alt="GAN sample 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-            <img src="images/gan/run_1/samples_2.png" alt="GAN sample 2" style="flex: 1; min-width: 0; object-fit: contain;" />
-            <img src="images/gan/run_1/samples_3.png" alt="GAN sample 3" style="flex: 1; min-width: 0; object-fit: contain;" />
-            <img src="images/gan/run_1/samples_4.png" alt="GAN sample 4" style="flex: 1; min-width: 0; object-fit: contain;" />
-            <img src="images/gan/run_1/samples_5.png" alt="GAN sample 5" style="flex: 1; min-width: 0; object-fit: contain;" />
-          </div>
-        </div>
-      </div>
-      <h2>ÉTAPE 2: L'architecture des modèles</h2>
-      Le papier original de <a href="https://arxiv.org/pdf/1511.06434">DCGAN</a> (DCGAN étant les GAN avec des couches de convolution) propose
-      4 couches de convolution, comme en IA personne ne sait ce qu'il fait et qu'on se contente de faire ce qui marche parce que ça marche je vais prendre une architecture similaire.
-      <div class="code-block">
-          <span class="code-filename">model.py</span>
-          <pre><code class="language-python">
-  class Discriminator(torch.nn.Module): # 1.58M parameters
-    def __init__(self):
-        super().__init__()
-        self.features = torch.nn.Sequential(
-            torch.nn.utils.spectral_norm(
-                torch.nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1)
-            ), # 3 * 64 * 3 * 3 + 64 = 1,792
-            torch.nn.LeakyReLU(0.2),
-            torch.nn.utils.spectral_norm(
-                torch.nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1)
-            ), # 64 * 128 * 3 * 3 + 128 = 73,856
-            torch.nn.LeakyReLU(0.2),
-            torch.nn.utils.spectral_norm(
-                torch.nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1)
-            ), # 128 * 256 * 3 * 3 + 256 = 295,168
-            torch.nn.LeakyReLU(0.2),
-            torch.nn.utils.spectral_norm(
-                torch.nn.Conv2d(256, 512, kernel_size=3, stride=2, padding=1)
-            ), # 256 * 512 * 3 * 3 + 512 = 1,180,160
-            torch.nn.LeakyReLU(0.2),
-            torch.nn.Flatten(),
-        )
-        # 4 stride-2 convs on 112x128: 112->56->28->14->7, 128->64->32->16->8
-        # flat_size = 512 * 7 * 8 = 28,672
-        dummy = torch.zeros(1, *INPUT_SHAPE)
-        flat_size = self.features(dummy).shape[1]
-        self.classifier = torch.nn.Sequential(
-            torch.nn.Dropout(0.4),
-            torch.nn.Linear(flat_size, 1), # 28,672 * 1 + 1 = 28,673
-        )
+      train_step(d_optimizer, criterion(d_model(batch), real_labels))
+      train_step(d_optimizer, criterion(d_model(generate_fake(g_model, config)), fake_labels))
 
-    def forward(self, x):
-        return self.classifier(self.features(x))
+      # Last time I tested, the Generator was training slower than the Discriminator, this is expected:
+      # It's probably way easier to discriminate an image than to generate a convincing one.
+      # However, if the Discriminator gets too good and guess right every time, the Generator cannot
+      # learn what's working. To balance this, I decided to train the generator twice, but we will find
+      # more elegant solutions later.
+      for _ in range(2):
+      train_step(g_optimizer, criterion(d_model(generate_fake(g_model, config)), real_labels))
+
+
+      def train(config):
+      g_model, d_model, g_optimizer, d_optimizer = make_model(config)
+      dataset = make_dataset(config)
+
+      for epoch in range(config["number_epochs"]):
+      update_lr(g_optimizer, d_optimizer, config)
+      train_epoch(g_model, d_model, g_optimizer, d_optimizer, dataset, config)
+      log_samples(g_model, epoch)
+
+      save_model(g_model, d_model, config)
+    </code></pre>
+  </div>
+  <h3>RÉSULTATS:</h3>
+  Résultats après une (1) epoch, c'est à dire un entrainement sur chacune des images une fois.
+  Le but de cet entrainement est surtout de valider le code, tester l'intégration avec Wandb, s'assurer que la loss ne dégénère pas...
+  <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
+    <img src="images/gan/run_1/samples_1.png" alt="GAN sample 1" style="flex: 1; min-width: 0; object-fit: contain;" />
+    <img src="images/gan/run_1/samples_2.png" alt="GAN sample 2" style="flex: 1; min-width: 0; object-fit: contain;" />
+    <img src="images/gan/run_1/samples_3.png" alt="GAN sample 3" style="flex: 1; min-width: 0; object-fit: contain;" />
+    <img src="images/gan/run_1/samples_4.png" alt="GAN sample 4" style="flex: 1; min-width: 0; object-fit: contain;" />
+    <img src="images/gan/run_1/samples_5.png" alt="GAN sample 5" style="flex: 1; min-width: 0; object-fit: contain;" />
+  </div>
+</div>
+
+<h2>ÉTAPE 2: L'architecture des modèles</h2>
+Le papier original de <a href="https://arxiv.org/pdf/1511.06434">DCGAN</a> (DCGAN étant les GAN avec des couches de convolution) propose
+4 couches de convolution, comme en IA personne ne sait ce qu'il fait et qu'on se contente de faire ce qui marche parce que ça marche je vais prendre une architecture similaire.
+<div class="code-block">
+<span class="code-filename">model.py</span>
+<pre><code class="language-python">
+class Discriminator(torch.nn.Module): # 1.58M parameters
+def __init__(self):
+super().__init__()
+self.features = torch.nn.Sequential(
+torch.nn.utils.spectral_norm(
+torch.nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1)
+), # 3 * 64 * 3 * 3 + 64 = 1,792
+torch.nn.LeakyReLU(0.2),
+torch.nn.utils.spectral_norm(
+torch.nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1)
+), # 64 * 128 * 3 * 3 + 128 = 73,856
+torch.nn.LeakyReLU(0.2),
+torch.nn.utils.spectral_norm(
+torch.nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1)
+), # 128 * 256 * 3 * 3 + 256 = 295,168
+torch.nn.LeakyReLU(0.2),
+torch.nn.utils.spectral_norm(
+torch.nn.Conv2d(256, 512, kernel_size=3, stride=2, padding=1)
+), # 256 * 512 * 3 * 3 + 512 = 1,180,160
+torch.nn.LeakyReLU(0.2),
+torch.nn.Flatten(),
+)
+# 4 stride-2 convs on 112x128: 112->56->28->14->7, 128->64->32->16->8
+# flat_size = 512 * 7 * 8 = 28,672
+dummy = torch.zeros(1, *INPUT_SHAPE)
+flat_size = self.features(dummy).shape[1]
+self.classifier = torch.nn.Sequential(
+torch.nn.Dropout(0.4),
+torch.nn.Linear(flat_size, 1), # 28,672 * 1 + 1 = 28,673
+)
+
+def forward(self, x):
+return self.classifier(self.features(x))
 
 
 class Generator(torch.nn.Module): # 5.69M parameters
-    def __init__(self, latent_size: int):
-        super().__init__()
-        n_nodes = 512 * (112 // (2**4)) * (128 // (2**4))  # 512 * 7 * 8 = 28,672
-        self.features = torch.nn.Sequential(
-            torch.nn.Linear(latent_size, n_nodes),              # latent_size * 28,672 + 28,672
-                                                                # e.g. latent=100: 2,895,872
-            torch.nn.LeakyReLU(0.2),
-            Reshape(512, 7, 8),
-            torch.nn.ConvTranspose2d(512, 256, kernel_size=4, stride=2, padding=1),  # 512 * 256 * 4 * 4 + 256 = 2,097,408
-            torch.nn.BatchNorm2d(256),                          # 256 * 2 = 512
-            torch.nn.LeakyReLU(0.2),
-            torch.nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),  # 256 * 128 * 4 * 4 + 128 = 524,416
-            torch.nn.BatchNorm2d(128),                          # 128 * 2 = 256
-            torch.nn.LeakyReLU(0.2),
-            torch.nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),   # 128 * 64 * 4 * 4 + 64 = 131,136
-            torch.nn.BatchNorm2d(64),                           # 64 * 2 = 128
-            torch.nn.LeakyReLU(0.2),
-            torch.nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),    # 64 * 32 * 4 * 4 + 32 = 32,800
-            torch.nn.BatchNorm2d(32),                           # 32 * 2 = 64
-            torch.nn.LeakyReLU(0.2),
-        )
-        self.generator = torch.nn.Sequential(
-            torch.nn.ConvTranspose2d(32, 3, kernel_size=7, padding=3),               # 32 * 3 * 7 * 7 + 3 = 4,707
-            torch.nn.Tanh()
-        )
+def __init__(self, latent_size: int):
+super().__init__()
+n_nodes = 512 * (112 // (2**4)) * (128 // (2**4))  # 512 * 7 * 8 = 28,672
+self.features = torch.nn.Sequential(
+torch.nn.Linear(latent_size, n_nodes),              # latent_size * 28,672 + 28,672
+# e.g. latent=100: 2,895,872
+torch.nn.LeakyReLU(0.2),
+Reshape(512, 7, 8),
+torch.nn.ConvTranspose2d(512, 256, kernel_size=4, stride=2, padding=1),  # 512 * 256 * 4 * 4 + 256 = 2,097,408
+torch.nn.BatchNorm2d(256),                          # 256 * 2 = 512
+torch.nn.LeakyReLU(0.2),
+torch.nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),  # 256 * 128 * 4 * 4 + 128 = 524,416
+torch.nn.BatchNorm2d(128),                          # 128 * 2 = 256
+torch.nn.LeakyReLU(0.2),
+torch.nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),   # 128 * 64 * 4 * 4 + 64 = 131,136
+torch.nn.BatchNorm2d(64),                           # 64 * 2 = 128
+torch.nn.LeakyReLU(0.2),
+torch.nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),    # 64 * 32 * 4 * 4 + 32 = 32,800
+torch.nn.BatchNorm2d(32),                           # 32 * 2 = 64
+torch.nn.LeakyReLU(0.2),
+)
+self.generator = torch.nn.Sequential(
+torch.nn.ConvTranspose2d(32, 3, kernel_size=7, padding=3),               # 32 * 3 * 7 * 7 + 3 = 4,707
+torch.nn.Tanh()
+)
 
-    def forward(self, x):
-        return self.generator(self.features(x))
-        </code></pre>
-    </div>
-    <h3>RÉSULTATS:</h3>
-    <p>
-    Cette fois je m'autorise à aller jusqu'à 10 epochs.
-    Pour rappel, le Generator génère des images à partir d'un vecteur seed aléatoire. Cependant, si on fixe un vecteur seed, on peut voir l'évolution du modèle sur le même "prompt"
-    </p>
-    <p><strong>Epoch 1</strong></p>
-    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
-      <img src="images/gan/run_2/sample_1_epoch_0001.png" alt="Sample 1 epoch 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-      <img src="images/gan/run_2/sample_2_epoch_0001.png" alt="Sample 2 epoch 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-      <img src="images/gan/run_2/sample_3_epoch_0001.png" alt="Sample 3 epoch 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-      <img src="images/gan/run_2/sample_4_epoch_0001.png" alt="Sample 4 epoch 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-      <img src="images/gan/run_2/sample_5_epoch_0001.png" alt="Sample 5 epoch 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-    </div>
-    <p><strong>Epoch 10</strong></p>
-    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
-      <img src="images/gan/run_2/sample_1_epoch_0010.png" alt="Sample 1 epoch 10" style="flex: 1; min-width: 0; object-fit: contain;" />
-      <img src="images/gan/run_2/sample_2_epoch_0010.png" alt="Sample 2 epoch 10" style="flex: 1; min-width: 0; object-fit: contain;" />
-      <img src="images/gan/run_2/sample_3_epoch_0010.png" alt="Sample 3 epoch 10" style="flex: 1; min-width: 0; object-fit: contain;" />
-      <img src="images/gan/run_2/sample_4_epoch_0010.png" alt="Sample 4 epoch 10" style="flex: 1; min-width: 0; object-fit: contain;" />
-      <img src="images/gan/run_2/sample_5_epoch_0010.png" alt="Sample 5 epoch 10" style="flex: 1; min-width: 0; object-fit: contain;" />
-    </div>
-    <p><strong>Évolution (epoch 1 → 10)</strong></p>
-    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
-      <img src="images/gan/run_2/evolution_1.gif" alt="Evolution 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-      <img src="images/gan/run_2/evolution_2.gif" alt="Evolution 2" style="flex: 1; min-width: 0; object-fit: contain;" />
-      <img src="images/gan/run_2/evolution_3.gif" alt="Evolution 3" style="flex: 1; min-width: 0; object-fit: contain;" />
-      <img src="images/gan/run_2/evolution_4.gif" alt="Evolution 4" style="flex: 1; min-width: 0; object-fit: contain;" />
-      <img src="images/gan/run_2/evolution_5.gif" alt="Evolution 5" style="flex: 1; min-width: 0; object-fit: contain;" />
-    </div>
-
-				<!-- Footer -->
-				{{ include "assets/partials/footer.html" }}
+def forward(self, x):
+return self.generator(self.features(x))
+</code></pre>
+</div>
+<h3>RÉSULTATS:</h3>
+<p>
+Cette fois je m'autorise à aller jusqu'à 10 epochs.
+Pour rappel, le Generator génère des images à partir d'un vecteur seed aléatoire. Cependant, si on fixe un vecteur seed, on peut voir l'évolution du modèle sur le même "prompt"
+</p>
+<p><strong>Epoch 1</strong></p>
+<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
+<img src="images/gan/run_2/sample_1_epoch_0001.png" alt="Sample 1 epoch 1" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_2/sample_2_epoch_0001.png" alt="Sample 2 epoch 1" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_2/sample_3_epoch_0001.png" alt="Sample 3 epoch 1" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_2/sample_4_epoch_0001.png" alt="Sample 4 epoch 1" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_2/sample_5_epoch_0001.png" alt="Sample 5 epoch 1" style="flex: 1; min-width: 0; object-fit: contain;" />
+</div>
+<p><strong>Epoch 10</strong></p>
+<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
+<img src="images/gan/run_2/sample_1_epoch_0010.png" alt="Sample 1 epoch 10" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_2/sample_2_epoch_0010.png" alt="Sample 2 epoch 10" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_2/sample_3_epoch_0010.png" alt="Sample 3 epoch 10" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_2/sample_4_epoch_0010.png" alt="Sample 4 epoch 10" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_2/sample_5_epoch_0010.png" alt="Sample 5 epoch 10" style="flex: 1; min-width: 0; object-fit: contain;" />
+</div>
+<p><strong>Évolution (epoch 1 → 10)</strong></p>
+<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
+<img src="images/gan/run_2/evolution_1.gif" alt="Evolution 1" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_2/evolution_2.gif" alt="Evolution 2" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_2/evolution_3.gif" alt="Evolution 3" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_2/evolution_4.gif" alt="Evolution 4" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_2/evolution_5.gif" alt="Evolution 5" style="flex: 1; min-width: 0; object-fit: contain;" />
+</div>
 
 
 
-    </div>
-		<!-- Scripts -->
-			<script src="assets/js/jquery.min.js"></script>
-			<script src="assets/js/browser.min.js"></script>
-			<script src="assets/js/breakpoints.min.js"></script>
-			<script src="assets/js/util.js"></script>
-			<script src="assets/js/main.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+</div>
+<!-- Footer -->
+{{ include "assets/partials/footer.html" }}
 
-	</body>
+
+
+</div>
+<!-- Scripts -->
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/browser.min.js"></script>
+<script src="assets/js/breakpoints.min.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+</body>
 </html>
