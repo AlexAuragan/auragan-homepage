@@ -47,6 +47,8 @@
           <div class="code-block">
           <span class="code-filename">model.py</span>
           <pre><code class="language-python">
+# Generator model, takes a seed vector and make an image
+  # It is trained to fool the Discriminator.
 class Discriminator(torch.nn.Module):
     def __init__(self):
         super().__init__()
