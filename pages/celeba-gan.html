@@ -239,8 +239,85 @@ Pour rappel, le Generator génère des images à partir d'un vecteur seed aléat
 <img src="images/gan/run_2/evolution_4.gif" alt="Evolution 4" style="flex: 1; min-width: 0; object-fit: contain;" />
 <img src="images/gan/run_2/evolution_5.gif" alt="Evolution 5" style="flex: 1; min-width: 0; object-fit: contain;" />
 </div>
-</div>
+<h2>ÉTAPE 3: Équilibrage D/G</h2>
+Durant l'étape 2, il y avait toujours un écart de loss, entre le Discriminator et le Generator, pour parer à cela, nous avons plusieurs options à notre disposition:
+<list>
+<li>Label Smoothing: Cela consiste à dire qu'une vraie image n'est pas vraie à 100%, mais seulement à quelque chose autours de 95%, le but étant de gaslight le discriminateur pour qu'il ne prène pas trop la confiance.</li>
+<li>Adaptative Learning Rate: La version propre de ma première solution (double entrainement pour le Generator), on peut simplement comparer les Loss, et ponderer le learning rate en fonction du delta</li>
+</list>
+Voici un exemple d'adaptative learining rate:
+<div class="code-block">
+<span class="code-filename">model.py</span>
+<pre><code class="language-python">
+def compute_lr_scale(d_loss_real, d_loss_fake, g_loss, base_lr_d, base_lr_g, strength=0.5):
+    LN2 = math.log(2)  # ~0.693, equilibrium loss value
 
+    # D is winning when EITHER term is too low
+    d_best = min(d_loss_real, d_loss_fake)
+
+    d_advantage = LN2 - d_best  # large when D is crushing fakes
+    # G is winning when its loss is low
+    g_advantage = LN2 - g_loss
+
+    # scale lr down for whoever is ahead, clamp to [0.1, 1.0]
+    d_scale = (1.0 - strength * max(0, d_advantage) / LN2)
+    g_scale = (1.0 - strength * max(0, g_advantage) / LN2)
+
+    d_scale = max(0.1, min(1.0, d_scale))
+    g_scale = max(0.1, min(1.0, g_scale))
+
+    return base_lr_d * d_scale, base_lr_g * g_scale
+</code></pre>
+</div>
+Après une run de 50 epochs, on a un total model collapse avec la loss du Generator qui monte encore très haut. Le but du jeu ça va être de tester des formules au pif jusqu'à ce qu'on trouve un truc qui marche
+<div class="code-block">
+<span class="code-filename">core.py</span>
+<pre><code class="language-python">
+def compute_lr_scale(d_loss_real, d_loss_fake, g_loss, base_lr_d, base_lr_g, strength=0.5):
+    LN2 = math.log(2)  # ~0.693, equilibrium loss value
+
+    # D is winning when EITHER term is too low
+    d_best = min(d_loss_real, d_loss_fake)
+
+    d_advantage = LN2 - d_loss_fake  # Actually it's fine if d_loss_real is high, it is independent of our Generator
+    # G is winning when its loss is low
+    g_advantage = LN2 - g_loss
+
+    # scale lr down for whoever is ahead, clamp to [0.1, 1.0]
+    d_scale = (1.0 - strength * max(0, d_advantage) / LN2)
+    g_scale = (1.0 - strength * max(0, g_advantage) / LN2)
+
+    d_scale = max(0.1, min(1.0, d_scale))
+    g_scale = max(0.1, min(1.0, g_scale))
+
+    return base_lr_d * d_scale, base_lr_g * g_scale
+</code></pre>
+</div>
+Une autre idée c'est d'utiliser la pénalité R1, qui va pénaliser le Discriminator s'il est sensible à de petites variations:
+<p>En principe, une image qu'elle soit vraie ou fausse, ne change pas de label pour un pixel, ou une petite variation.
+La pénalité R1 augmente la loss du Discriminator s'il est sensible aux petites variations.
+</p>
+<span class="code-filename">core.py</span>
+<pre><code class="language-python">
+
+def train_epoch(g_model, d_model, g_optimizer, d_optimizer, g_scaler, d_scaler, dataset, model_config, training_config, num_epoch, global_step):
+rength=0.5):
+  # R1 gradient penalty every r1_batch_mod steps
+  if global_step % training_config["r1_batch_mod"] == 0:
+      grad = torch.autograd.grad(
+          d_real_out.sum(), batch, create_graph=True
+      )[0]
+      r1 = grad.pow(2).flatten(1).sum(1).mean()
+      d_loss = d_loss_real + d_loss_fake + (10.0/2) * 16 * r1
+  else:
+      d_loss = d_loss_real + d_loss_fake
+
+</code></pre>
+</div>
+Mettre en place ces outils d'équilibrage a été suffisant pour garder les losses autours de ln(2)
+<span class="image main"><img src="images/gan/run_5/losses.png" alt="run 5 losses" style="max-height: 300px; object-fit: contain;" /></span>
+
+</div>
 </div>
 <!-- Footer -->
 {{ include "assets/partials/footer.html" }}
