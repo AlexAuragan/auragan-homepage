@@ -328,6 +328,7 @@ Mettre en place ces outils d'équilibrage a été suffisant pour garder les loss
 <h2>ÉTAPE 4: Scaling</h2>
 Maintenant que tout marche, l'idée est de tenter sur des modèles plus gros, et sur un plus long entrainement:
 
+<div class="code-block">
 <span class="code-filename">model.py</span>
 <pre><code class="language-python">
 class Discriminator(torch.nn.Module): # 2.38M parameters
