@@ -317,11 +317,121 @@ rength=0.5):
 Mettre en place ces outils d'équilibrage a été suffisant pour garder les losses autours de ln(2)
 <span class="image main"><img src="images/gan/run_5/losses.png" alt="run 5 losses" style="max-height: 300px; object-fit: contain;" /></span>
 <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
-<img src="images/gan/run_2/evolution_1.gif" alt="Evolution 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/evolution_2.gif" alt="Evolution 2" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/evolution_3.gif" alt="Evolution 3" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/evolution_4.gif" alt="Evolution 4" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/evolution_5.gif" alt="Evolution 5" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_5/evolution_1.gif" alt="Evolution 1" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_5/evolution_2.gif" alt="Evolution 2" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_5/evolution_3.gif" alt="Evolution 3" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_5/evolution_4.gif" alt="Evolution 4" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_5/evolution_5.gif" alt="Evolution 5" style="flex: 1; min-width: 0; object-fit: contain;" />
+</div>
+
+<h2>ÉTAPE 4: Scaling</h2>
+Maintenant que tout marche, l'idée est de tenter sur des modèles plus gros, et sur un plus long entrainement:
+
+<span class="code-filename">model.py</span>
+<pre><code class="language-python">
+class Discriminator(torch.nn.Module): # 2.38M parameters
+    @staticmethod
+    def down_block(dims_in, dims_out): # 9 * dims_out * (dims_in + dims_out) + 2 * dims_out
+        return torch.nn.Sequential(
+            torch.nn.utils.spectral_norm(
+                torch.nn.Conv2d(dims_in, dims_out, kernel_size=3, stride=2, padding=1) # dims_in * dims_out * 9 + dims_out
+            ),
+            torch.nn.LeakyReLU(0.2),
+            torch.nn.utils.spectral_norm(
+                torch.nn.Conv2d(dims_out, dims_out, kernel_size=3, padding=1) # dims_out^2 * 9 + dims_out
+            ),
+            torch.nn.LeakyReLU(0.2),
+        )
+
+    def __init__(self):
+        super().__init__()
+        self.input = torch.nn.Sequential(
+            torch.nn.utils.spectral_norm(torch.nn.Conv2d(3, 64, kernel_size=3, padding=1)),
+            torch.nn.LeakyReLU(0.2),
+        )
+        self.features = torch.nn.Sequential(
+            self.down_block(64, 64),     # 74k
+            self.down_block(64, 128),    # 221k
+            self.down_block(128, 256),   # 885k
+            self.down_block(256, 256),   # 1.18M
+        )
+
+        flat_size = 256 * 7 * 8  # 14336
+        self.classifier = torch.nn.Sequential(
+            torch.nn.Flatten(),
+            torch.nn.Dropout(0.4),
+            torch.nn.Linear(flat_size, 1),
+        )
+
+    def forward(self, x):
+        return self.classifier(self.features(self.input(x)))
+
+
+class Reshape(torch.nn.Module):
+    def __init__(self, *shape):
+        super().__init__()
+        self.shape = shape
+
+    def forward(self, x):
+        return x.view(x.size(0), *self.shape)
+
+
+class Generator(torch.nn.Module): # 4.3M parameters
+    @staticmethod
+    def up_block(dims_in, dims_out): # 9 * c_out * (c_in + c_out) + 6 * c_out
+        return torch.nn.Sequential(
+            torch.nn.Upsample(scale_factor=2, mode="nearest"),
+            torch.nn.Conv2d(dims_in, dims_out, kernel_size=3, padding=1), # 9 * dims_in * dims_out + dims_out
+            torch.nn.BatchNorm2d(dims_out), # 2 * c_out
+            torch.nn.LeakyReLU(0.2),
+            torch.nn.Conv2d(dims_out, dims_out, kernel_size=3, padding=1), # 9 * dims_out^2 + dims_out
+            torch.nn.BatchNorm2d(dims_out), # 2 * c_out
+            torch.nn.LeakyReLU(0.2)
+        )
+
+    def __init__(self, latent_size: int): # 4.3M
+        super().__init__()
+        n_nodes = 256 * (112 // (2**4)) * (128 // (2**4))  # 256 * 7 * 8 = 28,672
+        self.projection = torch.nn.Sequential(
+            torch.nn.Linear(latent_size, n_nodes),  # 1.43M
+            Reshape(256, 7, 8),
+            torch.nn.BatchNorm2d(256),
+            torch.nn.LeakyReLU(0.2),
+        )
+
+        self.features = torch.nn.Sequential(
+            self.up_block(256, 256), # 1.18M
+            self.up_block(256, 256), # 1.18M
+            self.up_block(256, 256), # 1.8M
+            self.up_block(256, 128), # 444k
+        )
+        self.generator = torch.nn.Sequential(
+            torch.nn.Conv2d(128, 64, kernel_size=3, padding=1), # 72k
+            torch.nn.LeakyReLU(0.2),
+            torch.nn.Conv2d(64, 3, kernel_size=1),
+            torch.nn.Tanh(),
+        )
+
+    def forward(self, x):
+        return self.generator(self.features(self.projection(x)))</code></pre>
+</div>
+
+J'ai entrainé ce modèle sur 100 epochs sur une VM GCP, j'ai du tweak quelques hyperparamètres pour stabiliser l'entrainemeint mais je suis rapidement tomber sur une run stable
+<h3>RÉSULTATS:</h3>
+<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
+<img src="images/gan/run_8/samples_1_316601.png" alt="Sample 1" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_8/samples_2_316601.png" alt="Sample 2" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_8/samples_3_316601.png" alt="Sample 3" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_8/samples_4_316601.png" alt="Sample 4" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_8/samples_5_316601.png" alt="Sample 5" style="flex: 1; min-width: 0; object-fit: contain;" />
+</div>
+<p><strong>Évolution</strong></p>
+<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
+<img src="images/gan/run_8/evolution_1.gif" alt="Evolution 1" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_8/evolution_2.gif" alt="Evolution 2" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_8/evolution_3.gif" alt="Evolution 3" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_8/evolution_4.gif" alt="Evolution 4" style="flex: 1; min-width: 0; object-fit: contain;" />
+<img src="images/gan/run_8/evolution_5.gif" alt="Evolution 5" style="flex: 1; min-width: 0; object-fit: contain;" />
 </div>
 
 </div>
