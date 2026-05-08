@@ -1,52 +1,89 @@
-<!DOCTYPE HTML>
+<!doctype html>
 <!--
 Phantom by HTML5 UP
 html5up.net | @ajlkn
 Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 -->
 <html>
-<head>
-  <title>CelebA GAN - auragan.fr</title>
-  <meta charset="utf-8" />
-  <base href="/" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <link rel="stylesheet" href="assets/css/main.css" />
-  <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" />
-  <link rel="stylesheet" href="assets/css/custom.css" />
-</head>
-<body class="is-preload">
-<!-- Wrapper -->
-<div id="wrapper">
+    <head>
+        <title>CelebA GAN - auragan.fr</title>
+        <meta charset="utf-8" />
+        <base href="/" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, user-scalable=no"
+        />
+        <link rel="stylesheet" href="assets/css/main.css" />
+        <noscript
+            ><link rel="stylesheet" href="assets/css/noscript.css"
+        /></noscript>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css"
+        />
+        <link rel="stylesheet" href="assets/css/custom.css" />
+    </head>
+    <body class="is-preload">
+        <!-- Wrapper -->
+        <div id="wrapper">
+            <!-- Header -->
+            {{ include "assets/partials/header.html" }}
 
-<!-- Header -->
-{{ include "assets/partials/header.html" }}
+            <!-- Menu -->
+            {{ include "assets/partials/menu.html" }}
 
-<!-- Menu -->
-{{ include "assets/partials/menu.html" }}
-
-<!-- Main -->
-<div id="main">
-<div class="inner">
-  <h1>CelebA GAN</h1>
-  <span class="image main"><img src="images/gan/architecture.png" alt="gan architecture" style="max-height: 300px; object-fit: contain;" /></span>
-  <p>
-    Sur cette page je vais expliquer comment j'ai entrainé mon propre modèle d'IA dans le but de faire des deepfake à partir du dataset <a href="https://www.kaggle.com/datasets/jessicali9530/celeba-dataset">CelebA</a>
-  </p>
-  <h2>Objectif</h2>
-  <p>
-    Ce n'est pas la première fois que je realise ce projet, j'ai déjà tenté l'expérience en 2022 mais je m'étais confronté à plusieurs problèmes:
-    <list>
-      <li>Je n'avais aucune idée de comment mesurer les progrès de mon modèle, à cause des fonctionnement des GAN, il n'y a pas vraiment de loss qui diminue</li>
-      <li>En conséquent, je n'avais aucune idée de combien de compute je devais allouer, parle-t-on d'heures ? De jours ? De semaine ?</li>
-      <li>J'étais étudiant et j'avais peur d'allouer un budget, aujourd'hui je peux me permettre de louer une VM sur google cloud si besoin, je peux donc tester des modèles plus gros et plus longtemps</li>
-    </list>
-    Mon objectif aujourd'hui est de reproduire l'expérience avec un plus gros budget, de meilleurs connaissances et un état de l'art plus poussé.
-  </p>
-  <h2>ÉTAPE 1: Structure de base</h2>
-  <div class="code-block">
-    <span class="code-filename">model.py</span>
-    <pre><code class="language-python">
+            <!-- Main -->
+            <div id="main">
+                <div class="inner">
+                    <h1>CelebA GAN</h1>
+                    <span class="image main"
+                        ><img
+                            src="images/gan/architecture.png"
+                            alt="gan architecture"
+                            style="max-height: 300px; object-fit: contain"
+                    /></span>
+                    <p>
+                        Sur cette page je vais expliquer comment j'ai entrainé
+                        mon propre modèle d'IA dans le but de faire des deepfake
+                        à partir du dataset
+                        <a
+                            href="https://www.kaggle.com/datasets/jessicali9530/celeba-dataset"
+                            >CelebA</a
+                        >
+                    </p>
+                    <h2>Objectif</h2>
+                    <p>
+                        Ce n'est pas la première fois que je realise ce projet,
+                        j'ai déjà tenté l'expérience en 2022 mais je m'étais
+                        confronté à plusieurs problèmes:
+                        <list>
+                            <li>
+                                Je n'avais aucune idée de comment mesurer les
+                                progrès de mon modèle, à cause des
+                                fonctionnement des GAN, il n'y a pas vraiment de
+                                loss qui diminue
+                            </li>
+                            <li>
+                                En conséquent, je n'avais aucune idée de combien
+                                de compute je devais allouer, parle-t-on
+                                d'heures ? De jours ? De semaine ?
+                            </li>
+                            <li>
+                                J'étais étudiant et j'avais peur d'allouer un
+                                budget, aujourd'hui je peux me permettre de
+                                louer une VM sur google cloud si besoin, je peux
+                                donc tester des modèles plus gros et plus
+                                longtemps
+                            </li>
+                        </list>
+                        Mon objectif aujourd'hui est de reproduire l'expérience
+                        avec un plus gros budget, de meilleurs connaissances et
+                        un état de l'art plus poussé.
+                    </p>
+                    <h2>ÉTAPE 1: Structure de base</h2>
+                    <div class="code-block">
+                        <span class="code-filename">model.py</span>
+                        <pre><code class="language-python">
 # Generator model, takes a random seed vector and make an image
 # It is trained to fool the Discriminator.
 class Discriminator(torch.nn.Module):
@@ -76,10 +113,10 @@ class Generator(torch.nn.Module):
     def forward(self, x):
         return self.net(x)
     </code></pre>
-  </div>
-  <div class="code-block">
-    <span class="code-filename">core.py</span>
-    <pre><code class="language-python">
+                    </div>
+                    <div class="code-block">
+                        <span class="code-filename">core.py</span>
+                        <pre><code class="language-python">
 def train_step(optimizer, loss):
     optimizer.zero_grad()
     loss.backward()
@@ -119,24 +156,57 @@ def train(config):
 
     save_model(g_model, d_model, config)
     </code></pre>
-  </div>
-  <h3>RÉSULTATS:</h3>
-  Résultats après une (1) epoch, c'est à dire un entrainement sur chacune des images une fois.
-  Le but de cet entrainement est surtout de valider le code, tester l'intégration avec Wandb, s'assurer que la loss ne dégénère pas...
-  <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
-    <img src="images/gan/run_1/samples_1.png" alt="GAN sample 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-    <img src="images/gan/run_1/samples_2.png" alt="GAN sample 2" style="flex: 1; min-width: 0; object-fit: contain;" />
-    <img src="images/gan/run_1/samples_3.png" alt="GAN sample 3" style="flex: 1; min-width: 0; object-fit: contain;" />
-    <img src="images/gan/run_1/samples_4.png" alt="GAN sample 4" style="flex: 1; min-width: 0; object-fit: contain;" />
-    <img src="images/gan/run_1/samples_5.png" alt="GAN sample 5" style="flex: 1; min-width: 0; object-fit: contain;" />
-  </div>
+                    </div>
+                    <h3>RÉSULTATS:</h3>
+                    Résultats après une (1) epoch, c'est-à-dire un entrainement
+                    sur chacune des images une fois. Le but de cet entrainement
+                    est surtout de valider le code, tester l'intégration avec
+                    Wandb, s'assurer que la loss ne dégénère pas...
+                    <div
+                        style="
+                            display: flex;
+                            gap: 10px;
+                            justify-content: center;
+                            flex-wrap: nowrap;
+                        "
+                    >
+                        <img
+                            src="images/gan/run_1/samples_1.png"
+                            alt="GAN sample 1"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_1/samples_2.png"
+                            alt="GAN sample 2"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_1/samples_3.png"
+                            alt="GAN sample 3"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_1/samples_4.png"
+                            alt="GAN sample 4"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_1/samples_5.png"
+                            alt="GAN sample 5"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                    </div>
 
-  <h2>ÉTAPE 2: L'architecture des modèles</h2>
-Le papier original de <a href="https://arxiv.org/pdf/1511.06434">DCGAN</a> (DCGAN étant les GAN avec des couches de convolution) propose
-4 couches de convolution, comme en IA personne ne sait ce qu'il fait et qu'on se contente de faire ce qui marche parce que ça marche je vais prendre une architecture similaire.
-<div class="code-block">
-<span class="code-filename">model.py</span>
-<pre><code class="language-python">
+                    <h2>ÉTAPE 2: L'architecture des modèles</h2>
+                    Le papier original de
+                    <a href="https://arxiv.org/pdf/1511.06434">DCGAN</a> (DCGAN
+                    étant les GAN avec des couches de convolution) propose 4
+                    couches de convolution, comme en IA personne ne sait ce
+                    qu'il fait et qu'on se contente de faire ce qui marche parce
+                    que ça marche je vais prendre une architecture similaire.
+                    <div class="code-block">
+                        <span class="code-filename">model.py</span>
+                        <pre><code class="language-python">
 class Discriminator(torch.nn.Module): # 1.58M parameters
     def __init__(self):
         super().__init__()
@@ -202,53 +272,159 @@ class Generator(torch.nn.Module): # 5.69M parameters
     def forward(self, x):
         return self.generator(self.features(x))
 </code></pre>
-</div>
-<h3>RÉSULTATS:</h3>
-<p>
-Cette fois je m'autorise à aller jusqu'à 10 epochs.
-Pour rappel, le Generator génère des images à partir d'un vecteur seed aléatoire. Cependant, si on fixe un vecteur seed, on peut voir l'évolution du modèle sur le même "prompt"
-</p>
-<p><strong>Epoch 1</strong></p>
-<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
-<img src="images/gan/run_2/sample_1_epoch_0001.png" alt="Sample 1 epoch 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/sample_2_epoch_0001.png" alt="Sample 2 epoch 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/sample_3_epoch_0001.png" alt="Sample 3 epoch 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/sample_4_epoch_0001.png" alt="Sample 4 epoch 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/sample_5_epoch_0001.png" alt="Sample 5 epoch 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-</div>
-<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap; font-size: 5em; line-height: 1;">
-  <span style="flex: 1; text-align: center;">↓</span>
-  <span style="flex: 1; text-align: center;">↓</span>
-  <span style="flex: 1; text-align: center;">↓</span>
-  <span style="flex: 1; text-align: center;">↓</span>
-  <span style="flex: 1; text-align: center;">↓</span>
-</div>
-<p><strong>Epoch 10</strong></p>
-<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
-<img src="images/gan/run_2/sample_1_epoch_0010.png" alt="Sample 1 epoch 10" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/sample_2_epoch_0010.png" alt="Sample 2 epoch 10" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/sample_3_epoch_0010.png" alt="Sample 3 epoch 10" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/sample_4_epoch_0010.png" alt="Sample 4 epoch 10" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/sample_5_epoch_0010.png" alt="Sample 5 epoch 10" style="flex: 1; min-width: 0; object-fit: contain;" />
-</div>
-<p><strong>Évolution (epoch 1 → 10)</strong></p>
-<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
-<img src="images/gan/run_2/evolution_1.gif" alt="Evolution 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/evolution_2.gif" alt="Evolution 2" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/evolution_3.gif" alt="Evolution 3" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/evolution_4.gif" alt="Evolution 4" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_2/evolution_5.gif" alt="Evolution 5" style="flex: 1; min-width: 0; object-fit: contain;" />
-</div>
-<h2>ÉTAPE 3: Équilibrage D/G</h2>
-Durant l'étape 2, il y avait toujours un écart de loss, entre le Discriminator et le Generator, pour parer à cela, nous avons plusieurs options à notre disposition:
-<list>
-<li>Label Smoothing: Cela consiste à dire qu'une vraie image n'est pas vraie à 100%, mais seulement à quelque chose autours de 95%, le but étant de gaslight le discriminateur pour qu'il ne prène pas trop la confiance.</li>
-<li>Adaptative Learning Rate: La version propre de ma première solution (double entrainement pour le Generator), on peut simplement comparer les Loss, et ponderer le learning rate en fonction du delta</li>
-</list>
-Voici un exemple d'adaptative learining rate:
-<div class="code-block">
-<span class="code-filename">model.py</span>
-<pre><code class="language-python">
+                    </div>
+                    <h3>RÉSULTATS:</h3>
+                    <p>
+                        Cette fois, je m'autorise à aller jusqu'à 10 epochs.
+                        Pour rappel, le Generator génère des images à partir
+                        d'un vecteur seed aléatoire. Cependant, si on fixe un
+                        vecteur seed, on peut voir l'évolution du modèle sur le
+                        même "prompt".
+                    </p>
+                    <p><strong>Epoch 1</strong></p>
+                    <div
+                        style="
+                            display: flex;
+                            gap: 10px;
+                            justify-content: center;
+                            flex-wrap: nowrap;
+                        "
+                    >
+                        <img
+                            src="images/gan/run_2/sample_1_epoch_0001.png"
+                            alt="Sample 1 epoch 1"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_2/sample_2_epoch_0001.png"
+                            alt="Sample 2 epoch 1"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_2/sample_3_epoch_0001.png"
+                            alt="Sample 3 epoch 1"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_2/sample_4_epoch_0001.png"
+                            alt="Sample 4 epoch 1"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_2/sample_5_epoch_0001.png"
+                            alt="Sample 5 epoch 1"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                    </div>
+                    <div
+                        style="
+                            display: flex;
+                            gap: 10px;
+                            justify-content: center;
+                            flex-wrap: nowrap;
+                            font-size: 5em;
+                            line-height: 1;
+                        "
+                    >
+                        <span style="flex: 1; text-align: center">↓</span>
+                        <span style="flex: 1; text-align: center">↓</span>
+                        <span style="flex: 1; text-align: center">↓</span>
+                        <span style="flex: 1; text-align: center">↓</span>
+                        <span style="flex: 1; text-align: center">↓</span>
+                    </div>
+                    <p><strong>Epoch 10</strong></p>
+                    <div
+                        style="
+                            display: flex;
+                            gap: 10px;
+                            justify-content: center;
+                            flex-wrap: nowrap;
+                        "
+                    >
+                        <img
+                            src="images/gan/run_2/sample_1_epoch_0010.png"
+                            alt="Sample 1 epoch 10"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_2/sample_2_epoch_0010.png"
+                            alt="Sample 2 epoch 10"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_2/sample_3_epoch_0010.png"
+                            alt="Sample 3 epoch 10"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_2/sample_4_epoch_0010.png"
+                            alt="Sample 4 epoch 10"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_2/sample_5_epoch_0010.png"
+                            alt="Sample 5 epoch 10"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                    </div>
+                    <p><strong>Évolution (epoch 1 → 10)</strong></p>
+                    <div
+                        style="
+                            display: flex;
+                            gap: 10px;
+                            justify-content: center;
+                            flex-wrap: nowrap;
+                        "
+                    >
+                        <img
+                            src="images/gan/run_2/evolution_1.gif"
+                            alt="Evolution 1"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_2/evolution_2.gif"
+                            alt="Evolution 2"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_2/evolution_3.gif"
+                            alt="Evolution 3"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_2/evolution_4.gif"
+                            alt="Evolution 4"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_2/evolution_5.gif"
+                            alt="Evolution 5"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                    </div>
+                    <h2>ÉTAPE 3: Équilibrage D/G</h2>
+                    Durant l'étape 2, il y avait toujours un écart de loss,
+                    entre le Discriminator et le Generator, pour parer à cela,
+                    nous avons plusieurs options à notre disposition:
+                    <list>
+                        <li>
+                            Label Smoothing: Cela consiste à dire qu'une vraie
+                            image n'est pas vraie à 100%, mais seulement à
+                            quelque chose autours de 95%, le but étant de
+                            gaslight le discriminateur pour qu'il ne prène pas
+                            trop la confiance.
+                        </li>
+                        <li>
+                            Adaptative Learning Rate: La version propre de ma
+                            première solution (double entrainement pour le
+                            Generator), on peut simplement comparer les Loss, et
+                            ponderer le learning rate en fonction du delta
+                        </li>
+                    </list>
+                    Voici un exemple d'adaptative learining rate:
+                    <div class="code-block">
+                        <span class="code-filename">model.py</span>
+                        <pre><code class="language-python">
 def compute_lr_scale(d_loss_real, d_loss_fake, g_loss, base_lr_d, base_lr_g, strength=0.5):
     LN2 = math.log(2)  # ~0.693, equilibrium loss value
 
@@ -268,11 +444,14 @@ def compute_lr_scale(d_loss_real, d_loss_fake, g_loss, base_lr_d, base_lr_g, str
 
     return base_lr_d * d_scale, base_lr_g * g_scale
 </code></pre>
-</div>
-Après une run de 50 epochs, on a un total model collapse avec la loss du Generator qui monte encore très haut. Le but du jeu ça va être de tester des formules au pif jusqu'à ce qu'on trouve un truc qui marche
-<div class="code-block">
-<span class="code-filename">core.py</span>
-<pre><code class="language-python">
+                    </div>
+                    Après une run de 50 epochs, on a un total model collapse
+                    avec la loss du Generator qui monte encore très haut. Le but
+                    du jeu ça va être de tester des formules au pif jusqu'à ce
+                    qu'on trouve un truc qui marche
+                    <div class="code-block">
+                        <span class="code-filename">core.py</span>
+                        <pre><code class="language-python">
 def compute_lr_scale(d_loss_real, d_loss_fake, g_loss, base_lr_d, base_lr_g, strength=0.5):
     LN2 = math.log(2)  # ~0.693, equilibrium loss value
 
@@ -292,14 +471,19 @@ def compute_lr_scale(d_loss_real, d_loss_fake, g_loss, base_lr_d, base_lr_g, str
 
     return base_lr_d * d_scale, base_lr_g * g_scale
 </code></pre>
-</div>
-Une autre idée c'est d'utiliser la pénalité R1, qui va pénaliser le Discriminator s'il est sensible à de petites variations:
-<p>En principe, une image qu'elle soit vraie ou fausse, ne change pas de label pour un pixel, ou une petite variation.
-La pénalité R1 augmente la loss du Discriminator s'il est sensible aux petites variations.
-</p>
-<div class="code-block">
-<span class="code-filename">core.py</span>
-<pre><code class="language-python">
+                    </div>
+                    Une autre idée, c'est d'utiliser la pénalité R1, qui va
+                    pénaliser le Discriminator s'il est sensible à de petites
+                    variations:
+                    <p>
+                        En principe, une image qu'elle soit vraie ou fausse, ne
+                        change pas de label pour un pixel, ou une petite
+                        variation. La pénalité R1 augmente la loss du
+                        Discriminator s'il est sensible aux petites variations.
+                    </p>
+                    <div class="code-block">
+                        <span class="code-filename">core.py</span>
+                        <pre><code class="language-python">
 
 def train_epoch(g_model, d_model, g_optimizer, d_optimizer, g_scaler, d_scaler, dataset, model_config, training_config, num_epoch, global_step):
 rength=0.5):
@@ -314,23 +498,57 @@ rength=0.5):
       d_loss = d_loss_real + d_loss_fake
 
 </code></pre>
-</div>
-Mettre en place ces outils d'équilibrage a été suffisant pour garder les losses autours de ln(2)
-<span class="image main"><img src="images/gan/run_5/losses.png" alt="run 5 losses" style="max-height: 300px; object-fit: contain;" /></span>
-<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
-<img src="images/gan/run_5/evolution_1.gif" alt="Evolution 1" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_5/evolution_2.gif" alt="Evolution 2" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_5/evolution_3.gif" alt="Evolution 3" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_5/evolution_4.gif" alt="Evolution 4" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_5/evolution_5.gif" alt="Evolution 5" style="flex: 1; min-width: 0; object-fit: contain;" />
-</div>
+                    </div>
+                    Mettre en place ces outils d'équilibrage a été suffisant
+                    pour garder les losses autours de ln(2)
+                    <span class="image main"
+                        ><img
+                            src="images/gan/run_5/losses.png"
+                            alt="run 5 losses"
+                            style="max-height: 300px; object-fit: contain"
+                    /></span>
+                    <div
+                        style="
+                            display: flex;
+                            gap: 10px;
+                            justify-content: center;
+                            flex-wrap: nowrap;
+                        "
+                    >
+                        <img
+                            src="images/gan/run_5/evolution_1.gif"
+                            alt="Evolution 1"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_5/evolution_2.gif"
+                            alt="Evolution 2"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_5/evolution_3.gif"
+                            alt="Evolution 3"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_5/evolution_4.gif"
+                            alt="Evolution 4"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_5/evolution_5.gif"
+                            alt="Evolution 5"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                    </div>
 
-<h2>ÉTAPE 4: Scaling</h2>
-Maintenant que tout marche, l'idée est de tenter sur des modèles plus gros, et sur un plus long entrainement:
+                    <h2>ÉTAPE 4: Scaling</h2>
+                    Maintenant que tout marche, l'idée est de tenter sur des
+                    modèles plus gros, et sur un plus long entrainement:
 
-<div class="code-block">
-<span class="code-filename">model.py</span>
-<pre><code class="language-python">
+                    <div class="code-block">
+                        <span class="code-filename">model.py</span>
+                        <pre><code class="language-python">
 class Discriminator(torch.nn.Module): # 2.38M parameters
     @staticmethod
     def down_block(dims_in, dims_out): # 9 * dims_out * (dims_in + dims_out) + 2 * dims_out
@@ -416,48 +634,109 @@ class Generator(torch.nn.Module): # 4.3M parameters
 
     def forward(self, x):
         return self.generator(self.features(self.projection(x)))</code></pre>
-</div>
+                    </div>
 
-J'ai entrainé ce modèle sur 100 epochs sur une VM GCP, j'ai du tweak quelques hyperparamètres pour stabiliser l'entrainemeint mais je suis rapidement tomber sur une run stable
-<h3>RÉSULTATS:</h3>
-<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
-<img src="images/gan/run_8/samples_12_316601.png" alt="Sample 12" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_8/samples_14_316601.png" alt="Sample 14" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_8/samples_17_316601.png" alt="Sample 17" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_8/samples_7_316601.png" alt="Sample 7" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_8/samples_9_316601.png" alt="Sample 9" style="flex: 1; min-width: 0; object-fit: contain;" />
-</div>
-<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap; font-size: 5em; line-height: 1;">
-  <span style="flex: 1; text-align: center;">↓</span>
-  <span style="flex: 1; text-align: center;">↓</span>
-  <span style="flex: 1; text-align: center;">↓</span>
-  <span style="flex: 1; text-align: center;">↓</span>
-  <span style="flex: 1; text-align: center;">↓</span>
-</div>
-<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;">
-<img src="images/gan/run_8/evolution_12.gif" alt="Evolution 12" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_8/evolution_14.gif" alt="Evolution 14" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_8/evolution_17.gif" alt="Evolution 17" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_8/evolution_7.gif" alt="Evolution 7" style="flex: 1; min-width: 0; object-fit: contain;" />
-<img src="images/gan/run_8/evolution_9.gif" alt="Evolution 9" style="flex: 1; min-width: 0; object-fit: contain;" />
-</div>
-
-</div>
-</div>
-<!-- Footer -->
-{{ include "assets/partials/footer.html" }}
-
-
-
-</div>
-<!-- Scripts -->
-<script src="assets/js/jquery.min.js"></script>
-<script src="assets/js/browser.min.js"></script>
-<script src="assets/js/breakpoints.min.js"></script>
-<script src="assets/js/util.js"></script>
-<script src="assets/js/main.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
-
-</body>
+                    J'ai entrainé ce modèle sur 100 epochs sur une VM GCP, j'ai
+                    dû tweak quelques hyper-paramètres pour stabiliser
+                    l'entrainement, mais je suis rapidement tombé sur une run
+                    stable
+                    <h3>RÉSULTATS:</h3>
+                    <div
+                        style="
+                            display: flex;
+                            gap: 10px;
+                            justify-content: center;
+                            flex-wrap: nowrap;
+                        "
+                    >
+                        <img
+                            src="images/gan/run_8/samples_12_316601.png"
+                            alt="Sample 12"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_8/samples_14_316601.png"
+                            alt="Sample 14"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_8/samples_17_316601.png"
+                            alt="Sample 17"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_8/samples_7_316601.png"
+                            alt="Sample 7"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_8/samples_9_316601.png"
+                            alt="Sample 9"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                    </div>
+                    <div
+                        style="
+                            display: flex;
+                            gap: 10px;
+                            justify-content: center;
+                            flex-wrap: nowrap;
+                            font-size: 5em;
+                            line-height: 1;
+                        "
+                    >
+                        <span style="flex: 1; text-align: center">↓</span>
+                        <span style="flex: 1; text-align: center">↓</span>
+                        <span style="flex: 1; text-align: center">↓</span>
+                        <span style="flex: 1; text-align: center">↓</span>
+                        <span style="flex: 1; text-align: center">↓</span>
+                    </div>
+                    <div
+                        style="
+                            display: flex;
+                            gap: 10px;
+                            justify-content: center;
+                            flex-wrap: nowrap;
+                        "
+                    >
+                        <img
+                            src="images/gan/run_8/evolution_12.gif"
+                            alt="Evolution 12"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_8/evolution_14.gif"
+                            alt="Evolution 14"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_8/evolution_17.gif"
+                            alt="Evolution 17"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_8/evolution_7.gif"
+                            alt="Evolution 7"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                        <img
+                            src="images/gan/run_8/evolution_9.gif"
+                            alt="Evolution 9"
+                            style="flex: 1; min-width: 0; object-fit: contain"
+                        />
+                    </div>
+                </div>
+            </div>
+            <!-- Footer -->
+            {{ include "assets/partials/footer.html" }}
+        </div>
+        <!-- Scripts -->
+        <script src="assets/js/jquery.min.js"></script>
+        <script src="assets/js/browser.min.js"></script>
+        <script src="assets/js/breakpoints.min.js"></script>
+        <script src="assets/js/util.js"></script>
+        <script src="assets/js/main.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    </body>
 </html>
