@@ -1,0 +1,104 @@
+
+<!doctype html>
+<!--
+Phantom by HTML5 UP
+html5up.net | @ajlkn
+Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+    <head>
+        <title>Pokemon Showdown AI</title>
+        <meta charset="utf-8" />
+        <base href="/" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, user-scalable=no"
+        />
+        <link rel="stylesheet" href="assets/css/main.css" />
+        <noscript
+            ><link rel="stylesheet" href="assets/css/noscript.css"
+        /></noscript>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css"
+        />
+        <link rel="stylesheet" href="assets/css/custom.css" />
+    </head>
+    <body class="is-preload">
+        <!-- Wrapper -->
+        <div id="wrapper">
+            <!-- Header -->
+            {{ include "assets/partials/header.html" }}
+
+            <!-- Menu -->
+            {{ include "assets/partials/menu.html" }}
+
+            <!-- Main -->
+            <div id="main">
+                < id == "inner">
+                    <h1>Pokemon Showdown AI</h1>
+                    <div>
+                        <a href="https://pokemonshowdown.com/">Pokemon Showdown</a> est une plateforme <b>open-source</b> qui permet de faire des combats Pokémon
+                        basé sur les mécaniques de la séries principales avec des combats au tours par tours où chaque pokémon possède 4 attaques.<br>
+                        Le site permet une customisation infinie des pokémons ainsi que des formats, où chaque générations de pokémon possède de nombreuses coupes
+                        allant de combats sans restrictions à la "<a href="https://www.smogon.com/dex/sm/formats/lc/">Little Cup</a>" où les pokémons doivent être
+                        non évolué et niveau 5.
+                    </div>
+                    <div>
+                        En plus d'être open-source, le projet est *relativement* facile à manipuler informatiquement. J'ai pu sans problème faire tourner une instance
+                        de Pokemon Showdown sur mon propre serveur et en quelques minutes, créer un bot qui joue aléatoirement via la websocket du serveur. Emphase sur
+                        le mot "websocket" et non "API": Pour avoir chercher je n'ai pas du tout trouver d'API ou de endpoint très explicite, seulement
+                        une connection par websocket qui permet d'envoyer des commandes et de lire la réponse du serveur sous format textuel. <br>
+                        Pour un bot qui joue aléatoirement encore ça va, la liste des actions étant très limité (4 moves, et 5 pokémons qu'on peut échanger), il suffit
+                        de choisir une action au hasard, quite à retenter si elle n'est pas valide. Cependant, avoir une compréhension plus fine de l'état du jeu, c'est à dire, entre autre:
+                        lister les pokémons et leurs états et statistiques pour chaque équipe, requier de parser les informations venant du websocket. <br>
+                        Pour faire cela, j'avais dans un premier temps utilisé <a href="https://github.com/hsahovic/poke-env">Poke-env</a> qui est très bien mais il y a
+                        parfois des limitations, des informations qui manque, et je ne savais pas si c'était une feature qui manquait à Poke-env où si c'était que l'information n'était
+                        pas donnée par Pokemon Showdown (que ce soit via websocket ou même via interface). De plus, j'avais l'impression que ce package m'empêchait de bien
+                        comprendre ce qu'il se passe under the hood sans pour autant m'apporter beaucoup de fonctionnalités que je ne pourrais pas programmer moi-même. <br>
+                        C'est donc dans l'optique d'en apprendre plus sur le fonctionnement de Pokemon Showdown vois même des subtilités des combats Pokemon en général, tout
+                        en ayant la main sur le format des données, que j'ai décidé de re-coder cette library moi-même.
+                    </div>
+                    <div>
+                        Pour cela, c'est assez simple, j'ai une classe `Client`, une classe `BattleState`, une classe `Parser` et quelques dataclasses pour les pokémons et
+                        leurs attaques et lorsqu'un client participe à un combat parser lit le contenu des messages diffusés dans le websocket et modifie le battle state du
+                        client en conséquence. <br>
+                        Il faut noter que chaque génération de pokémon ajoute de nouvelle features que mon parser, battle state, etc devront prendre en compte. J'ai donc
+                        commencé par implémenter ma library en me basant sur des combats de la génération 1, puis la génération 2, etc. <br>
+                        Je pense que je compte m'arrêter à la génération 4, car c'est là que le split physique vs spécial se fait /*TODO explain*/
+                        qui est une feature qui m'intéresse, c'est également la dernière version à laquelle j'ai pu joué durant mon enfance, et donc
+                        ça m'évite de devoir implémenter des features avec lesquelles je n'ai jamais joué.
+                    </div>
+                    <h2>Objectif</h2>
+                    <div>
+                    Mon but est de créer un bot pour jouer à Pokemon Showdown dans les formats classique dit "OU", pour cela j'envisage 2 "IA", une pour créer les équipes et une pour
+                    jouer les combats.
+                    Cependant, avant de tenter quoi que ce soit sur les combats Gen 4 OU, je vais commencer par les combats Gen 1 Random où les joueurs reçvoient des équipes aléatoires.
+                    Pour la libraire Python, je compte l'implémenter entièrement jusqu'à la Gen 4 avant de commencer la partie machine learning, car certaines features des générations
+                    2 à 4 pourraient potentiellement influencer mes structures de données et avoir des répercutions pour la Gen 1.
+                    </div>
+                    <h2>Plan initial: Le SDK python</h2>
+                    <div>
+                    Pour l'interface entre Pokemon Showdown et Python (le SDK), je vais donc implémenter l'architecture expliquée plus tôt pour les gen 1 à 4 pour les combats "Singles"
+                    (un seul Pokémon sur le terrain à la fois).<br>
+                    Puisqu'il existe de nombreuses intéractions entre les pokémons et leurs attaques, qu'il n'y a pas d'API officielle et que la documentation sur le websocket est sommaire,
+                    je vais tester chaque implémentation sur une série de combats aléatoires, en espérant qu'un grand nombre de combats testent à peu près
+                    toutes les attaques et capacités possible. Mais je sais d'avance que je ne pourrais pas tout tester, par exemple, que se passe-t-il quand
+                    un Pokémon n'a plus d'attaque disponnible ? Pour que cela arrive il faut une stratégie spéciale peu probable dans des équipes au hasard qui
+                    jouent au hasard.
+                    </div>
+                </div>
+            </div>
+            <!-- Footer -->
+            {{ include "assets/partials/footer.html" }}
+        </div>
+        <!-- Scripts -->
+        <script src="assets/js/jquery.min.js"></script>
+        <script src="assets/js/browser.min.js"></script>
+        <script src="assets/js/breakpoints.min.js"></script>
+        <script src="assets/js/util.js"></script>
+        <script src="assets/js/main.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    </body>
+</html>
